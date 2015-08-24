@@ -14,7 +14,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     final int MENU_CLEAR_ID = 1;
     final int MENU_EXIT_ID = 2;
-    final int MAX_RESULT_LENGHT = 10;
+    final int MAX_RESULT_LENGHT = 12;
+    final String KEY_INPUT_TEXT = "inputText";
+    final String KEY_RESULT_TEXT = "resultText";
+    final String KEY_INPUT_LIST = "inputList";
 
     Button but1;
     Button but2;
@@ -34,13 +37,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button butSub;
     Button butDel;
 
+    TextView textInput;
     TextView textResult;
 
-    LinkedList oper = new LinkedList<Character>();
-    String tmp = "";
+    LinkedList oper = new LinkedList<>();
+    double num1 = 0;
+    double num2 = 0;
+    double result = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -62,7 +69,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         butSub = (Button) findViewById(R.id.buttonSub);
         butDiv = (Button) findViewById(R.id.buttonDiv);
 
-        textResult = (TextView) findViewById(R.id.textView);
+        textInput = (TextView) findViewById(R.id.textView);
+        textResult = (TextView) findViewById(R.id.resultView);
+
+        if(savedInstanceState != null){
+//            String savedInput = savedInstanceState.getString(KEY_INPUT_TEXT);
+            //listToString(oper));
+            String savedResult = savedInstanceState.getString(KEY_RESULT_TEXT);
+            //String.valueOf(result));
+            textResult.setText(savedResult);
+//            textInput.setText(savedInput);
+            oper = (LinkedList) savedInstanceState.getSerializable(KEY_INPUT_LIST);
+            textInput.setText(listToString(oper));
+        }
 
         but1.setOnClickListener(this);
         but2.setOnClickListener(this);
@@ -82,11 +101,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         butSub.setOnClickListener(this);
         butDiv.setOnClickListener(this);
 
-//        if(this.getRequestedOrientation() == );
-
-
     }
-    // some changes
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -101,7 +116,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch(item.getItemId()) {
             case MENU_CLEAR_ID:
                 oper.clear();
-                textResult.setText(listToString(oper));
+                result = 0;
+                num1 = 0;
+                num2 = 0;
+                textInput.setText(listToString(oper));
+                textResult.setText(String.valueOf(result));
                 break;
             case MENU_EXIT_ID:
                 finish();
@@ -151,41 +170,127 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 newChar = '.';
                 break;
             case R.id.buttonEqual:
-                // TODO: count method
+                if (!oper.isEmpty() && (oper.contains('/') || oper.contains('+')
+                        || oper.contains('x') || oper.contains('-'))) {
+                    calculateResult();
+                }
                 break;
             case R.id.buttonDel:
-                if(!oper.isEmpty())
+                if (!oper.isEmpty())
                     oper.removeLast();
                 break;
             case R.id.buttonAdd:
-                // TODO: add method
+                if (!oper.isEmpty()) {
+                    newChar = '+';
+                    if(num1 !=0) {
+                        calculateResult();
+                    } else {
+                        num1 = Double.valueOf(listToString(oper));
+                        result = num1;
+                    }
+                }
                 break;
             case R.id.buttonMult:
-                // TODO: multiply method
+                if (!oper.isEmpty()) {
+                    newChar = 'x';
+                    if(num1 !=0) {
+                        calculateResult();
+                    } else {
+                        num1 = Double.valueOf(listToString(oper));
+                        result = num1;
+                    }
+                }
                 break;
             case R.id.buttonSub:
-                // TODO: substitute method
+                if (!oper.isEmpty()) {
+                    newChar = '-';
+                    if(num1 !=0) {
+                        calculateResult();
+                    } else {
+                        num1 = Double.valueOf(listToString(oper));
+                        result = num1;
+                    }
+                }
                 break;
             case R.id.buttonDiv:
-                // TODO: divide method
+                if(!oper.isEmpty()) {
+                    newChar = '/';
+                    if(num1 !=0) {
+                        calculateResult();
+                    } else {
+                        num1 = Double.valueOf(listToString(oper));
+                        result = num1;
+                    }
+                }
                 break;
             default:
                 break;
-
         }
         if((oper.size() < MAX_RESULT_LENGHT) && (newChar != ' ')) {
             oper.add(newChar);
         }
-        textResult.setText(listToString(oper));
 
+        textResult.setText(String.valueOf(result));
+
+        textInput.setText(listToString(oper));
     }
 
     String listToString(LinkedList l) {
-        String result = "";
+        String res = "";
+
         for(int i = 0; i < l.size(); i++) {
-            result += l.get(i);
+            res += l.get(i);
         }
-        return result;
+        return res;
     }
 
+    void calculateResult() {
+        String res = "";
+        boolean start = false;
+        Character operName = ' ';
+
+        for(int i = 0; i < oper.size(); i++) {
+            if(start)
+                res += oper.get(i);
+            if((Character)oper.get(i) == '+' || (Character)oper.get(i) == '/'
+                    || (Character)oper.get(i) == 'x' || (Character)oper.get(i) == '-') {
+                start = true;
+                operName = (Character) oper.get(i);
+            }
+        }
+        num2 = Double.valueOf(res);
+        switch(operName) {
+            case '+':
+                result = num1 + num2;
+                break;
+            case '/':
+                result = num1 / num2;
+                break;
+            case 'x':
+                result = num1 * num2;
+                break;
+            case '-':
+                result = num1 - num2;
+                break;
+            default:
+
+                break;
+        }
+        num1 = 0;
+        oper.clear();
+
+        for(int i = 0; i < String.valueOf(result).length(); i++) {
+            oper.add(String.valueOf(result).charAt(i));
+        }
+        result = 0;
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_RESULT_TEXT, (String) textResult.getText());
+//        outState.putString(KEY_INPUT_TEXT, (String) textInput.getText());
+        outState.putSerializable(KEY_INPUT_LIST, oper);
+    }
 }
